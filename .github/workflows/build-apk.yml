@@ -1,0 +1,48 @@
+
+name: Build MASTER AUDIO PRO APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '*.zip'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find and extract project ZIP
+        run: |
+          ZIP_FILE=$(find . -maxdepth 1 -name '*.zip' | head -n 1)
+          if [ -z "$ZIP_FILE" ]; then
+            echo "File ZIP proyek tidak ditemukan"
+            exit 1
+          fi
+          mkdir -p buildsrc
+          unzip -q "$ZIP_FILE" -d buildsrc
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build APK
+        working-directory: buildsrc/MASTER_AUDIO_PRO_Android_v0.1
+        run: gradle assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MASTER-AUDIO-PRO-APK
+          path: buildsrc/MASTER_AUDIO_PRO_Android_v0.1/app/build/outputs/apk/debug/app-debug.apk
