@@ -1,79 +1,35 @@
-
-name: Build MASTER AUDIO PRO APK
+name: Build MASTER AUDIO PRO v0.2
 
 on:
   workflow_dispatch:
   push:
     paths:
-      - '*.zip'
-      - '.github/workflows/build-apk.yml'
+      - '**'
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Extract project ZIP
-        run: |
-          ZIP_FILE=$(find . -maxdepth 1 -name '*.zip' | head -n 1)
-          if [ -z "$ZIP_FILE" ]; then
-            echo "ZIP tidak ditemukan"
-            exit 1
-          fi
-          mkdir -p buildsrc
-          unzip -q "$ZIP_FILE" -d buildsrc
-
-      - name: Fix Java and Kotlin target
-        run: |
-          cat > buildsrc/MASTER_AUDIO_PRO_Android_v0.1/app/build.gradle.kts <<'EOF'
-          plugins {
-              id("com.android.application")
-              id("org.jetbrains.kotlin.android")
-          }
-
-          android {
-              namespace = "com.masteraudiopro"
-              compileSdk = 35
-
-              defaultConfig {
-                  applicationId = "com.masteraudiopro"
-                  minSdk = 26
-                  targetSdk = 35
-                  versionCode = 1
-                  versionName = "0.1"
-              }
-
-              compileOptions {
-                  sourceCompatibility = JavaVersion.VERSION_17
-                  targetCompatibility = JavaVersion.VERSION_17
-              }
-
-              kotlinOptions {
-                  jvmTarget = "17"
-              }
-          }
-          EOF
-
-      - name: Set up Java
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
       - name: Build APK
-        working-directory: buildsrc/MASTER_AUDIO_PRO_Android_v0.1
         run: gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MASTER-AUDIO-PRO-APK
-          path: buildsrc/MASTER_AUDIO_PRO_Android_v0.1/app/build/outputs/apk/debug/app-debug.apk
+          name: MASTER-AUDIO-PRO-v0.2-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
